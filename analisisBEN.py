@@ -35,7 +35,7 @@ class InstancesMhs:
 # Listas de metaheuristicas a implementar
 mhsList = ['WOA']
 # Lista de colores de grafico por metaheuristica
-color = ['r','g']
+color = ['r']
 
 # Diccionario de metaheuristicas
 mhs = {name: InstancesMhs() for name in mhsList}
@@ -43,7 +43,7 @@ mhs = {name: InstancesMhs() for name in mhsList}
 bd = BD()
 
 instancias = bd.obtenerInstancias(f'''
-                                  "F9"
+                                  "F1"
                                   ''')
 
 for instancia in instancias:

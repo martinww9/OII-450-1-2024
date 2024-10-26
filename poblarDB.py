@@ -1,14 +1,21 @@
 from BD.sqlite import BD
 import json
+import os
 
 bd = BD()
+# if database doesnt exist create one, check existence with os
+if not os.path.exists('BD/resultados.db'):
+    bd.construirTablas()
+    print("------------------------------------------------------------------")
+    print("Base de datos creada")
 
-ben = False
+
+ben = True
 scp = True
 # mhs = ['EOO','FOX','GOA','GWO','HBA','PSA','PSO','RSA','SCA','SHO','TDA','WOA']
 mhs = ['WOA']
 
-cantidad = 0
+cantidad = 1
 
 DS_actions = [
     'V1-STD', 'V1-COM', 'V1-PS', 'V1-ELIT',
@@ -23,7 +30,7 @@ DS_actions = [
 
 if ben:
     # funciones = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F16','F17','F18','F19','F20','F15','F21','F22','F23']
-    funciones = ['F8']
+    funciones = ['F1']
     for funcion in funciones:
         # poblar ejecuciones Benchmark
         instancias = bd.obtenerInstancias(f'''"{funcion}"''')
