@@ -11,4 +11,5 @@ from Metaheuristics.Codes.GOA import iterarGOA
 from Metaheuristics.Codes.HBA import iterarHBA
 from Metaheuristics.Codes.TDO import iterarTDO
 from Metaheuristics.Codes.SHO import iterarSHO
+from Metaheuristics.Codes.WOM import iterarWOM
 # from Metaheuristics.Codes.DA import iterarDA
