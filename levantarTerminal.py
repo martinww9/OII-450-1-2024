@@ -16,7 +16,7 @@ def abrir_terminales_ejecutar_main(n_terminals):
     for i in range(n_terminals):
         # Comando para abrir terminal, cambiar a la ruta actual y ejecutar main.py
         if current_os == 'Windows':
-            terminal_command = f'start terminal /K "cd /d {ruta_actual} && python {programa}"'
+            terminal_command = f'start cmd /K "cd /d {ruta_actual} && python {programa}"'
             subprocess.Popen(terminal_command, shell=True)
         elif current_os == 'Linux':
             terminal_command = f'gnome-terminal -- bash -c "cd \'{ruta_actual}\' && python3 {programa}; exec bash"'
