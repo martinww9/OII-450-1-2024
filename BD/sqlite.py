@@ -637,7 +637,7 @@ class BD:
         try:
             cursor.execute("BEGIN")
             
-            # Only execute if from table experimento, estado is pendiente
+            # Only execute if from table experimento, estado is terminado
             estado = cursor.execute("SELECT estado FROM experimentos WHERE id_experimento = ?", (idExperimento,)).fetchone()
             if estado[0] == 'terminado':
                 cursor.execute("UPDATE sqlite_sequence SET seq = seq - 1 WHERE name = 'resultados';")
