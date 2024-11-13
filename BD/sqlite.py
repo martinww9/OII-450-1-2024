@@ -624,4 +624,43 @@ class BD:
         self.desconectar()
         return data
     
+    # Custom SQL methods
+    def eliminarExperimento(self, idExperimento): # Elimina un experimento y todas las filas relacionadas con este
+        '''
+        Metodo util para eliminar bloques de experimentos utilizando bucle for
+            ej: desde el experimento con id_experimento = 21 hasta id_experimento = 54
+        for i in range(21, 55):
+            db.eliminarExperimento(i)
+        '''
+        self.conectar()
+        cursor = self.getCursor()
+        try:
+            cursor.execute("BEGIN")
+            
+            # Only execute if from table experimento, estado is pendiente
+            estado = cursor.execute("SELECT estado FROM experimentos WHERE id_experimento = ?", (idExperimento,)).fetchone()
+            if estado[0] == 'terminado':
+                cursor.execute("UPDATE sqlite_sequence SET seq = seq - 1 WHERE name = 'resultados';")
+                cursor.execute("UPDATE sqlite_sequence SET seq = seq - 1 WHERE name = 'iteraciones';")
+            cursor.execute("UPDATE sqlite_sequence SET seq = seq - 1 WHERE name = 'experimentos';")
+            
+            cursor.execute("DELETE FROM resultados WHERE fk_id_experimento = ?", (idExperimento,))
+            cursor.execute("DELETE FROM iteraciones WHERE fk_id_experimento = ?", (idExperimento,))
+            cursor.execute("DELETE FROM experimentos WHERE id_experimento = ?", (idExperimento,))
+
+            self.commit()
+            
+        except sqlite3.Error as e:
+            conn = sqlite3.connect(self.getDataBase())
+            conn.rollback()
+            print("Error al eliminar experimento: ", e)
+        finally:
+            self.desconectar()
     
+    def reducirValoresqlite_sequence(self):
+        self.conectar()
+        cursor = self.getCursor()
+        cursor.execute("UPDATE sqlite_sequence SET seq = seq - 1 WHERE name = 'resultados';")
+        cursor.execute("UPDATE sqlite_sequence SET seq = seq - 1 WHERE name = 'iteraciones';")
+        self.commit()
+        self.desconectar()

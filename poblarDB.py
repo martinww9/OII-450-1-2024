@@ -13,8 +13,8 @@ if not os.path.exists('BD/resultados.db'):
 ben = False
 scp = True
 # mhs = ['EOO','FOX','GOA','GWO','HBA','PSA','PSO','RSA','SCA','SHO','TDA','WOA']
-#mhs = ['WOM', 'WOA', 'PSO']
-mhs = ['WOM']
+mhs = ['WOM', 'WOA', 'PSO']
+
 
 cantidad = 1
 
@@ -52,7 +52,7 @@ if ben:
         if funcion in ['F15','F21','F22','F23']:
             dimensiones = [4]
         iteraciones = 1000
-        experimentos = 3
+        experimentos = 1
         poblacion = 10
         for instancia in instancias:
             for dim in dimensiones:
@@ -71,11 +71,11 @@ if ben:
 if scp:
     # poblar ejecuciones SCP
     instancias = bd.obtenerInstancias(f'''
-                                      "scp41"
+                                      "scpnre5"
                                       ''')
-    iteraciones = 100
-    experimentos = 1
-    poblacion = 10
+    iteraciones = 500
+    experimentos = 32
+    poblacion = 15
     for instancia in instancias:
         for mh in mhs:
             binarizaciones = ['V3-STD','V3-ELIT']
