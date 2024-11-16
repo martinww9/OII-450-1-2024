@@ -2,7 +2,7 @@ import numpy as np
 import os
 import time
 from Problem.SCP.problem import SCP
-from Metaheuristics.imports import iterarGWO,iterarSCA,iterarWOA,iterarPSA,iterarGA
+from Metaheuristics.imports import iterarGWO,iterarSCA,iterarWOA,iterarPSA,iterarGA, iterarWOM
 from Metaheuristics.imports import iterarPSO,iterarFOX,iterarEOO,iterarRSA,iterarGOA,iterarHBA,iterarTDO,iterarSHO
 from Diversity.imports import diversidadHussain,porcentajesXLPXPT
 from Discretization import discretization as b
@@ -101,86 +101,93 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         # perturbo la poblacion con la metaheuristica, pueden usar SCA y GWO
         # en las funciones internas tenemos los otros dos for, for de individuos y for de dimensiones
         # print(population)
-        if mh == "SCA":
-            population = iterarSCA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
-        if mh == "GWO":
-            population = iterarGWO(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), 'MIN')
-        if mh == 'WOA':
-            population = iterarWOA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
-        if mh == 'PSA':
-            population = iterarPSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
-        if mh == "GA":
-            cross = float(param.split(";")[0].split(":")[1])
-            muta = float(param.split(";")[1].split(":")[1])
-            population = iterarGA(population.tolist(), fitness, cross, muta)
-        if mh == 'PSO':
-            population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), pBest.tolist(), vel, 1)
-        if mh == 'FOX':
-            population = iterarFOX(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
-        if mh == 'EOO':
-            population = iterarEOO(maxIter, iter, population.tolist(), best.tolist())
-        if mh == 'RSA':
-            population = iterarRSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(),0,1)
-        if mh == 'GOA':
-            population = iterarGOA(maxIter, iter, instance.getColumns(), population, best.tolist(), fitness.tolist(),fo, 'MIN')
-        if mh == 'HBA':
-            population = iterarHBA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), fitness.tolist(),fo, 'MIN')
-        if mh == 'TDO':
-            population = iterarTDO(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(),fo, 'MIN')
-        if mh == 'SHO':
-            population = iterarSHO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(),fo, 'MIN')
-        
-        # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
-        for i in range(population.__len__()):
-
-            if mh != "GA":
-                population[i] = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i])
-
-            flag, aux = instance.factibilityTest(population[i])
-            # print(aux)
-            if not flag: #solucion infactible
-                population[i] = instance.repair(population[i], repairType)
-                
-
-            fitness[i] = instance.fitness(population[i])
-
+        try:
+            if mh == "SCA":
+                population = iterarSCA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            if mh == "GWO":
+                population = iterarGWO(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), 'MIN')
+            if mh == 'WOA':
+                population = iterarWOA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            if mh == 'PSA':
+                population = iterarPSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            if mh == "GA":
+                cross = float(param.split(";")[0].split(":")[1])
+                muta = float(param.split(";")[1].split(":")[1])
+                population = iterarGA(population.tolist(), fitness, cross, muta)
             if mh == 'PSO':
-                if fitness[i] < pBestScore[i]:
-                    pBest[i] = np.copy(population[i])
+                population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), pBest.tolist(), vel, 1)
+            if mh == 'FOX':
+                population = iterarFOX(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            if mh == 'EOO':
+                population = iterarEOO(maxIter, iter, population.tolist(), best.tolist())
+            if mh == 'RSA':
+                population = iterarRSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(),0,1)
+            if mh == 'GOA':
+                population = iterarGOA(maxIter, iter, instance.getColumns(), population, best.tolist(), fitness.tolist(),fo, 'MIN')
+            if mh == 'HBA':
+                population = iterarHBA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), fitness.tolist(),fo, 'MIN')
+            if mh == 'TDO':
+                population = iterarTDO(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(),fo, 'MIN')
+            if mh == 'SHO':
+                population = iterarSHO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(),fo, 'MIN')
+            if mh == 'WOM':
+                lb = [0]*instance.getColumns()
+                ub = [1]*instance.getColumns()
+                population = iterarWOM(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), lb, ub, fo)
+        except:
+            exit(Exception("NO METAHEURISTIC FOUND"))
+        finally:
+            # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
+            for i in range(population.__len__()):
+
+                if mh != "GA":
+                    population[i] = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i])
+
+                flag, aux = instance.factibilityTest(population[i])
+                # print(aux)
+                if not flag: #solucion infactible
+                    population[i] = instance.repair(population[i], repairType)
+                    
+
+                fitness[i] = instance.fitness(population[i])
+
+                if mh == 'PSO':
+                    if fitness[i] < pBestScore[i]:
+                        pBest[i] = np.copy(population[i])
 
 
-        solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness
-        
-        #Conservo el best
-        if fitness[solutionsRanking[0]] < bestFitness:
-            bestFitness = fitness[solutionsRanking[0]]
-            best = population[solutionsRanking[0]]
-        matrixBin = population.copy()
-
-        div_t = diversidadHussain(population)
-
-        if maxDiversity < div_t:
-            maxDiversity = div_t
+            solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness
             
-        XPL , XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
+            #Conservo el best
+            if fitness[solutionsRanking[0]] < bestFitness:
+                bestFitness = fitness[solutionsRanking[0]]
+                best = population[solutionsRanking[0]]
+            matrixBin = population.copy()
 
-        timerFinal = time.time()
-        # calculo mi tiempo para la iteracion t
-        timeEjecuted = timerFinal - timerStart
-        if (iter+1) % (maxIter//4) == 0:
-        # if (iter+1) % 10 == 0:
-            print("iteracion: "+
-                str(iter+1)+
-                ", best: "+str(bestFitness)+
-                ", optimo: "+str(instance.getOptimum())+
-                ", time (s): "+str(round(timeEjecuted,3))+
-                ", XPT: "+str(XPT)+
-                ", XPL: "+str(XPL)+
-                ", DIV: "+str(div_t))
-        
-        results.write(
-            f'{iter+1},{str(bestFitness)},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
-        )
+            div_t = diversidadHussain(population)
+
+            if maxDiversity < div_t:
+                maxDiversity = div_t
+                
+            XPL , XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
+
+            timerFinal = time.time()
+            # calculo mi tiempo para la iteracion t
+            timeEjecuted = timerFinal - timerStart
+            if (iter+1) % (maxIter//4) == 0:
+            # if (iter+1) % 10 == 0:
+                print("iteracion: "+
+                    str(iter+1)+
+                    ", best: "+str(bestFitness)+
+                    ", optimo: "+str(instance.getOptimum())+
+                    ", time (s): "+str(round(timeEjecuted,3))+
+                    ", XPT: "+str(XPT)+
+                    ", XPL: "+str(XPL)+
+                    ", DIV: "+str(div_t))
+            
+            results.write(
+                f'{iter+1},{str(bestFitness)},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
+            )
     print("------------------------------------------------------------------------------------------------------")
     print("best fitness: "+str(bestFitness))
     print("Cantidad de columnas seleccionadas: "+str(sum(best)))

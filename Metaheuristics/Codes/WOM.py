@@ -1,66 +1,73 @@
 import random
+import copy
 import numpy as np
 
-# Inicializar la población
-def initialize_population(N, dimension, lower_bound, upper_bound):
-    return (lower_bound + np.random.rand(N, dimension) * (upper_bound - lower_bound)).astype(np.float64)
+# https://doi.org/10.3390/math12071059 Wombat Optimization Algorithm
+
+def eq4(population, fitness, i):
+    CFP_i = []
+    for k in range(len(fitness)):
+        if fitness[k] < fitness[i] and i != k:
+            CFP_i.append(population[k])
+            
+    if len(CFP_i) == 0: # Para que la lista no quede vacía, se agrega a si mismo
+        CFP_i.append(population[i])
+    return np.array(CFP_i)
+
+def eq5(SFP, population, i, dim):
+    # Actualizar cada dimensión de la nueva posición
+    population_part1 = copy.deepcopy(population) # Copia profunda para lista de listas
+    for j in range(dim):
+        r_ij = np.random.rand()  # Generar un número aleatorio entre 0 y 1
+        I_ij = np.random.choice([1, 2])  # Escoger entre 1 y 2
+        
+        # Actualizar la j-ésima dimensión de la nueva posición usando la fórmula
+        population_part1[i][j] = population[i][j] + r_ij * (SFP[j] - I_ij * population[i][j])
+    # Devolver la nueva posición sin modificar la población original
+    return np.array(population_part1)
 
 
-# Fase de forrajeo (exploración)
-def foraging_phase(i, population, fitness, r):
-    better_positions = [k for k in range(len(fitness)) if fitness[k] < fitness[i] and k != i]
-    if better_positions:  # Si existen mejores posiciones
-        SFP = population[random.choice(better_positions)].astype(np.float64)  # Asegúrate de que SFP sea float
-        I = random.randint(1, 2)  # Valor aleatorio 1 o 2
-        # Cambiar el tipo de population[i] a float
-        population[i] = population[i].astype(np.float64) + r * (SFP - I * population[i])
-    return population[i]
+def eq6(new_population, population, fitness, function, i):
+    new_fitness = fitness.copy()
+    _, new_fitness[i] = function(new_population[i])
+    
+    if new_fitness[i] <= fitness[i]: # Si el fitness es mejor, se actualiza la población
+        population[i] = new_population[i]
+    
+    return population, new_fitness
+
+def eq7(population, i, t, dim, lb, ub):
+    population_part2 = copy.deepcopy(population) # Copia profunda para lista de listas
+    for j in range(dim):
+        r_ij = np.random.rand()
+        population_part2[i][j] = population[i][j] + (1 - 2*r_ij) * ((ub[j] - lb[j])/(t+1)) # Actualizar la j-ésima dimensión
+    
+    return np.array(population_part2)
+
+def eq8(new_population, population, fitness, function, i): # Lo mismo que eq6
+    new_fitness = fitness.copy()
+    _, new_fitness[i] = function(new_population[i])
+    
+    if new_fitness[i] <= fitness[i]:
+        population[i] = new_population[i]
+        
+    return population, new_fitness
+
+def xplr(population, fitness, function, dim, i): # Fase de forrajeo / Exploracion
+    CFP_i = eq4(population, fitness, i)
+    pop_p1 = eq5(random.choice(CFP_i), population, i, dim)
+    population, new_fitness = eq6(pop_p1, population, fitness, function, i)
+    return population, new_fitness
+
+def xplt(population, fitness, function, dim, lb, ub, i, t): # Fase de escape / Explotacion
+    pop_p2 = eq7(population, i, t, dim, lb, ub)
+    population, new_fitness = eq8(pop_p2, population, fitness, function, i)
+    return population, new_fitness
 
 
-# Fase de escape
-def escape_phase(i, population, r, t, lower_bound, upper_bound):
-    # Aquí se asegura que population sea un numpy array
-    population = np.array(population) 
-
-    # Cambiar el acceso a population[i, j] para que funcione con numpy
-    new_position = population[i] + (1 - 2 * r) * (upper_bound - lower_bound) / t
-
-    # Asegurarse de que los nuevos valores están dentro de los límites
-    return np.clip(new_position, lower_bound, upper_bound)
-
-# Wombat Optimization Algorithm (adaptado)
-def iterarWOM(maxIter, t, dimension, population, bestSolution):
-    population = np.array(population).astype(np.float64)  # Cambiar a float64
-
-    lower_bound = -10  # Límite inferior
-    upper_bound = 10   # Límite superior
-
-    # Evaluar la función objetivo para la población actual
-    fitness = np.sum(population**2, axis=1)  # Vectorizar la evaluación de fitness
-
-    for it in range(maxIter):  # Cambié el bucle para que sea más claro
-        t = 1 - (it / maxIter)  # Recalcular t en cada iteración
-        t = max(t, 1e-10)  # Evitar la división por cero
-
-        for i in range(population.shape[0]):
-            r = random.uniform(0.0, 1.0)
-
-            # Fase de forrajeo
-            new_position = foraging_phase(i, population, fitness, r)
-
-            # Evaluar nueva posición
-            new_fitness = np.sum(new_position**2)
-            if new_fitness < fitness[i]:
-                population[i] = new_position
-                fitness[i] = new_fitness
-
-            # Fase de escape
-            new_position = escape_phase(i, population, r, t, lower_bound, upper_bound)
-
-            # Evaluar nueva posición
-            new_fitness = np.sum(new_position**2)
-            if new_fitness < fitness[i]:
-                population[i] = new_position
-                fitness[i] = new_fitness
-
-    return population
+def iterarWOM(maxIter, t, dim, population, fitness, lb, ub, f):
+    for i in range(len(population)):
+        population, fitness = xplr(population,fitness, f, dim, i)
+        population, fitness = xplt(population, fitness, f, dim, lb, ub, i, t)
+    return np.array(population)
+    

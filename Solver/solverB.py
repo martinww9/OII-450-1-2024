@@ -2,7 +2,7 @@ import time
 import numpy as np
 import os
 from Diversity.imports import diversidadHussain,porcentajesXLPXPT
-from Metaheuristics.imports import iterarGWO,iterarPSA,iterarSCA,iterarWOA
+from Metaheuristics.imports import iterarGWO,iterarPSA,iterarSCA,iterarWOA, iterarWOM
 from Metaheuristics.imports import iterarPSO,iterarFOX,iterarEOO,iterarRSA,iterarGOA,iterarHBA,iterarTDO,iterarSHO
 from Problem.Benchmark.Problem import fitness as f
 from util import util
@@ -110,73 +110,78 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         
         # perturbo la population con la metaheuristica, pueden usar SCA y GWO
         # en las funciones internas tenemos los otros dos for, for de individuos y for de dimensiones
-        if mh == "SCA":
-            population = iterarSCA(maxIter, iter, dim, population.tolist(), best.tolist())
-        if mh == "GWO":
-            population = iterarGWO(maxIter, iter, dim, population.tolist(), fitness.tolist(), 'MIN')
-        if mh == 'WOA':
-            population = iterarWOA(maxIter, iter, dim, population.tolist(), best.tolist())
-        if mh == 'PSA':
-            population = iterarPSA(maxIter, iter, dim, population.tolist(), best.tolist())
-        if mh == 'PSO':
-            population, vel = iterarPSO(maxIter, iter, dim, population.tolist(), best.tolist(), pBest.tolist(), vel, ub[0])
-        if mh == 'FOX':
-            population = iterarFOX(maxIter, iter, dim, population.tolist(), best.tolist())
-        if mh == 'EOO':
-            population = iterarEOO(maxIter, iter, population.tolist(), best.tolist())
-        if mh == 'RSA':
-            population = iterarRSA(maxIter, iter, dim, population.tolist(), best.tolist(),lb[0],ub[0])
-        if mh == 'GOA':
-            population = iterarGOA(maxIter, iter, dim, population, best.tolist(), fitness.tolist(),fo, 'MIN')
-        if mh == 'HBA':
-            population = iterarHBA(maxIter, iter, dim, population.tolist(), best.tolist(), fitness.tolist(),fo, 'MIN')
-        if mh == 'TDO':
-            population = iterarTDO(maxIter, iter, dim, population.tolist(), fitness.tolist(),fo, 'MIN')
-        if mh == 'SHO':
-            population = iterarSHO(maxIter, iter, dim, population.tolist(), best.tolist(),fo, 'MIN')
-
-        # calculo de factibilidad de cada individuo y calculo del fitness inicial
-        for i in range(population.__len__()):
-            for j in range(dim):
-                population[i, j] = np.clip(population[i, j], lb[j], ub[j])            
-            fitness[i] = f(function, population[i])
-
+        try:
+            if mh == "SCA":
+                population = iterarSCA(maxIter, iter, dim, population.tolist(), best.tolist())
+            if mh == "GWO":
+                population = iterarGWO(maxIter, iter, dim, population.tolist(), fitness.tolist(), 'MIN')
+            if mh == 'WOA':
+                population = iterarWOA(maxIter, iter, dim, population.tolist(), best.tolist())
+            if mh == 'PSA':
+                population = iterarPSA(maxIter, iter, dim, population.tolist(), best.tolist())
             if mh == 'PSO':
-                if fitness[i] < pBestScore[i]:
-                    pBest[i] = np.copy(population[i])
-            
-        solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness
-        
-        #Conservo el best
-        if fitness[solutionsRanking[0]] < bestFitness:
-            bestFitness = fitness[solutionsRanking[0]]
-            best = population[solutionsRanking[0]]
+                population, vel = iterarPSO(maxIter, iter, dim, population.tolist(), best.tolist(), pBest.tolist(), vel, ub[0])
+            if mh == 'FOX':
+                population = iterarFOX(maxIter, iter, dim, population.tolist(), best.tolist())
+            if mh == 'EOO':
+                population = iterarEOO(maxIter, iter, population.tolist(), best.tolist())
+            if mh == 'RSA':
+                population = iterarRSA(maxIter, iter, dim, population.tolist(), best.tolist(),lb[0],ub[0])
+            if mh == 'GOA':
+                population = iterarGOA(maxIter, iter, dim, population, best.tolist(), fitness.tolist(),fo, 'MIN')
+            if mh == 'HBA':
+                population = iterarHBA(maxIter, iter, dim, population.tolist(), best.tolist(), fitness.tolist(),fo, 'MIN')
+            if mh == 'TDO':
+                population = iterarTDO(maxIter, iter, dim, population.tolist(), fitness.tolist(),fo, 'MIN')
+            if mh == 'SHO':
+                population = iterarSHO(maxIter, iter, dim, population.tolist(), best.tolist(),fo, 'MIN')
+            if mh == 'WOM':
+                population = iterarWOM(maxIter, iter, dim, population.tolist(), fitness.tolist(), lb, ub, fo)
+        except:
+            exit(Exception("NO METAHEURISTIC FOUND"))
+        finally:
+            # calculo de factibilidad de cada individuo y calculo del fitness inicial
+            for i in range(population.__len__()):
+                for j in range(dim):
+                    population[i, j] = np.clip(population[i, j], lb[j], ub[j])            
+                fitness[i] = f(function, population[i])
 
-        div_t = diversidadHussain(population)
-
-        if maxDiversity < div_t:
-            maxDiversity = div_t
-            
-        XPL , XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
-
-        timerFinal = time.time()
-        # calculo mi tiempo para la iteracion t
-        timeEjecuted = timerFinal - timerStart
-        
-        if (iter+1) % (maxIter//4) == 0:
-        # if (iter+1) % 10 == 0:
-            print("iter: "+
-                str(iter+1)+
-                ", best: "+str(format(bestFitness,".2e"))+
-                ", optimo: "+str(optimo)+
-                ", time (s): "+str(round(timeEjecuted,3))+
-                ", XPT: "+str(XPT)+
-                ", XPL: "+str(XPL)+
-                ", DIV: "+str(div_t))
+                if mh == 'PSO':
+                    if fitness[i] < pBestScore[i]:
+                        pBest[i] = np.copy(population[i])
                 
-        results.write(
-            f'{iter+1},{str(format(bestFitness,".2e"))},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
-        )
+            solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness
+            
+            #Conservo el best
+            if fitness[solutionsRanking[0]] < bestFitness:
+                bestFitness = fitness[solutionsRanking[0]]
+                best = population[solutionsRanking[0]]
+
+            div_t = diversidadHussain(population)
+
+            if maxDiversity < div_t:
+                maxDiversity = div_t
+                
+            XPL , XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
+
+            timerFinal = time.time()
+            # calculo mi tiempo para la iteracion t
+            timeEjecuted = timerFinal - timerStart
+            
+            if (iter+1) % (maxIter//4) == 0:
+            # if (iter+1) % 10 == 0:
+                print("iter: "+
+                    str(iter+1)+
+                    ", best: "+str(format(bestFitness,".2e"))+
+                    ", optimo: "+str(optimo)+
+                    ", time (s): "+str(round(timeEjecuted,3))+
+                    ", XPT: "+str(XPT)+
+                    ", XPL: "+str(XPL)+
+                    ", DIV: "+str(div_t))
+                    
+            results.write(
+                f'{iter+1},{str(format(bestFitness,".2e"))},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
+            )
     finalTime = time.time()
     timeExecution = finalTime - initialTime
     print("------------------------------------------------------------------------------------------------------")
