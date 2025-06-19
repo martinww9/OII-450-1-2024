@@ -47,6 +47,12 @@ class SCP:
                 self.__block_size = 10
             elif instance[5] == 'g' or instance[5] == 'h':
                 self.__block_size = 120
+        if instance == 'facil' :
+            self.__block_size = 40
+        if instance == 'medio':
+            self.__block_size = 40
+        if instance == 'dificil':
+            self.__block_size = 100
         self.readInstance(instance)
 
     def getBlockSizes(self):
@@ -212,6 +218,9 @@ class SCP:
             ,'scpnrh3':[62,59]
             ,'scpnrh4':[63,58]
             ,'scpnrh5':[64,55]
+            , 'facil':[65, 5]
+            , 'medio':[66,429]
+            , 'dificil':[67,265]
         }
 
         for nomInstancia in orden:
@@ -351,6 +360,9 @@ def obtenerOptimo(archivoInstancia):
         ,'scpnrh3':[62,59]
         ,'scpnrh4':[63,58]
         ,'scpnrh5':[64,55]
+        , 'facil':[65, 5]
+        , 'medio':[66,429]
+        , 'dificil':[67,265]
     }
 
     for nomInstancia in orden:

@@ -3,7 +3,7 @@ import os
 import time
 from Problem.SCP.problem import SCP
 from Metaheuristics.imports import iterarGWO,iterarSCA,iterarWOA,iterarPSA,iterarGA, iterarWOM
-from Metaheuristics.imports import iterarPSO,iterarFOX,iterarEOO,iterarRSA,iterarGOA,iterarHBA,iterarTDO,iterarSHO
+from Metaheuristics.imports import iterarPSO,iterarFOX,iterarEOO,iterarRSA,iterarGOA,iterarHBA,iterarTDO,iterarSHO, iterarSA
 from Diversity.imports import diversidadHussain,porcentajesXLPXPT
 from Discretization import discretization as b
 from util import util
@@ -134,6 +134,10 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
                 lb = [0]*instance.getColumns()
                 ub = [1]*instance.getColumns()
                 population = iterarWOM(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), lb, ub, fo)
+            if mh == 'SA':
+                lb = [0]*instance.getColumns()
+                ub = [1]*instance.getColumns()
+                population = iterarSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), lb, ub ,100, fo)
         except:
             exit(Exception("NO METAHEURISTIC FOUND"))
         finally:

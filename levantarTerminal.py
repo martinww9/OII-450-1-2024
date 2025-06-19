@@ -29,5 +29,5 @@ def abrir_terminales_ejecutar_main(n_terminals):
 if __name__ == "__main__":
     print("Sistema operativo detectado:", platform.system())
     # Definir la cantidad de terminales a levantar
-    n_terminals = 7 # Cambia este valor según lo que necesites
+    n_terminals = 10 # Cambia este valor según lo que necesites
     abrir_terminales_ejecutar_main(n_terminals)
